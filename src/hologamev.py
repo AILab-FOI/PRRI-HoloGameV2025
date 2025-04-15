@@ -1559,6 +1559,14 @@ def HUD():
 # 155:000fffff0fffffffd0ffffff00ffffff0fffffff0fffffffe0ffffff00ffffff
 # 156:0dde00000e00eee00ee0ee0ff0000000ff0d0000ff0e0f0ef000ff00f000ff00
 # 157:0fffffff000fffff000fffffffffffffffffffff0fffffff0fffffff0fffffff
+# 160:fffff00affff0aaaffff0a8affff0888ffff0888ffff08d8fffff0ddffffff0d
+# 161:aa0fffffaaa0ffffaaaa0fffaaa80fff88880fffdbdd0fffdddd0fffddcc0fff
+# 162:fffff00affff0aaaffff0a8affff0888ffff0888ffff08d8fffff0ddffffff0d
+# 163:aa0fffffaaa0ffffaaaa0fffaaa80fff88880fffdbdd0fffdddd0fffddcc0fff
+# 176:fffff0ddfffff0edffffff0dfffffff0fffff00dffff0b77ffff0b77fffff0b0
+# 177:ded0ffffdee0ffffeee0ffffdee0ffffe770ffff7770ffff7bb0ffff00bb0fff
+# 178:fffff0ddfffff0edffffff0dfffffff0fffff00dffff0b77ffff0b77fffff0b0
+# 179:ded0ffffdee06060eeed060fdee0f0ffe770ffff7770ffff7bb0ffff00bb0fff
 # </SPRITES>
 
 # <MAP>
