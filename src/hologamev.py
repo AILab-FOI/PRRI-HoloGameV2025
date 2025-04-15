@@ -1091,9 +1091,9 @@ def ZapocniLevel(level): # poziva se u menu.py kada se odabere opcija da se uđe
     player.hsp = 0
     player.vsp = 0
     if level == 0:
-        music(0, 0, -1)
+       music(1, 0, -1)
     elif level == 1:
-        music(1, 0, -1)
+        music(0, 0, -1)
 
 def IgrajLevel():
     cls(0)
