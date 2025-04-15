@@ -417,7 +417,7 @@ class Enemy:
     projectile.desno = self.desno
     # doda projektil u listu
     projectiles.append(projectile)
-    sfx(1, "D-2", 3, 0, 2, 3)
+    sfx(7, "D-2", 3, 0, 2, 3)
 
   def ProvjeriKolizije(self, xdodatak, ydodatak):
     self.x += xdodatak
@@ -574,7 +574,7 @@ class Enemy2(Enemy):
     # doda projektil u listu
     projectiles.append(projectile)
 
-    sfx(3, "E-4", 3, 0, 2, 3)
+    sfx(10, "E-4", 3, 0, 2, 3)
 
   def ProvjeriKolizije(self, xdodatak, ydodatak):
     self.x += xdodatak
@@ -942,11 +942,11 @@ class Puska:
         metak.spr = Puska.svep[Puska.p[Puska.tp]].spr
 
         if Puska.svep[Puska.p[Puska.tp]].spr == 363:
-            sfx(2, "C-4", 5, 0, 2, -4)
+            sfx(12, "C-4", 5, 0, 2, -4)
         elif Puska.svep[Puska.p[Puska.tp]].spr == 362:
-            sfx(4, "G-4", 5, 0, 2, 2)
+            sfx(13, "G-4", 5, 0, 2, 2)
         elif Puska.svep[Puska.p[Puska.tp]].spr == 378:
-            sfx(11, "C-6", 5, 0, 2, 1)
+            sfx(14, "C-6", 5, 0, 2, 1)
 
         metci.append(metak)
         player.shootTimer=Puska.svep[Puska.p[Puska.tp]].firerate * 60
@@ -1018,7 +1018,7 @@ class PromjenaPuska:
         
         if self.pickUpBool and self.x < player.x + player.width and self.y < player.y + player.height and self.x > player.x - player.width + 8 and self.y > player.y - player.height:
             #zamijeni puske
-            sfx(10, "C-2", 3, 0, 2, 3)
+            sfx(15, "C-2", 3, 0, 2, 3)
             self.puskaSpr = Puska.svespr[Puska.p[Puska.tp]]
             noviBr = self.puskaBr
             self.puskaBr = Puska.p[Puska.tp] 
@@ -1130,7 +1130,7 @@ def ProvjeravajJeLiIgracKodVrata(): # sluzi za kraj levela
     tile_size = 8
     kojiTile = mget(round(player.x/tile_size), round(player.y/tile_size) + level*LEVEL_HEIGHT)
     if kojiTile in level_finish_tile_indexes:
-        sfx(6, "C-4", 15, 0, 2, 1)
+        sfx(16, "C-4", 15, 0, 2, 1)
         ZavrsiLevel()
         
 def ProvjeravajJeLiIgracULavi():
