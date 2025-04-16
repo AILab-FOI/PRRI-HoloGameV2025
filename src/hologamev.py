@@ -25,9 +25,10 @@ def TIC():
      print("Keys (AD) for moving left and right", 0, 16)
      print("Keys (WS) for moving up and down by laders", 0, 24)
      print("Key (B) for jump, key (E) for weapon change", 0, 32)
-     print("Key (shift) for dash", 0, 32)
      print("Key (F) for shooting. Be aware of lava nad spikes!!!", 0, 40)
      print("Touching the enemy also decreases health!!!", 0, 48)
+     print("Key (shift) for dash", 0, 56)
+     print("Key H for hacking the enemy and G is for killing the enemy", 0, 64)
  elif state=='menu':
    menu.Menu()
  elif state=='over':
@@ -417,25 +418,27 @@ class Enemy:
 
   def movement(self, coll):
     self.coll = coll
-    self.x = self.x + self.dx
-    if not self.dead and self.ProvjeriKolizije(6*self.dx, 0):
-      if not self.ProvjeriKolizije(3*self.dx, -9):
-        if self.ProvjeriKolizije(0, 1):
-          self.vsp = -self.skokJacina
-        else:
-          self.dx = -self.dx
-          self.desno = not self.desno
-    elif not self.dead and self.ProvjeriKolizije(3*self.dx, 0):
-      self.dx = -self.dx
-      self.desno = not self.desno
-    if not self.dead and self.x <= 0:
-      self.dx = 1  # mijenja stranu kad takne lijevu stranu
-      self.desno = True
-    elif not self.dead and self.x >= pogled.ogranicenjeX:
-      self.dx = -1  # mijenja stranu kad takne desnu stranu
-      self.desno = False
+     
+    if hacked_enemy != self:
+        self.x = self.x + self.dx  
+        if not self.dead and self.ProvjeriKolizije(6*self.dx, 0):
+            if not self.ProvjeriKolizije(3*self.dx, -9):
+                if self.ProvjeriKolizije(0, 1):
+                    self.vsp = -self.skokJacina
+                else:
+                    self.dx = -self.dx
+                    self.desno = not self.desno
+        elif not self.dead and self.ProvjeriKolizije(3*self.dx, 0):
+            self.dx = -self.dx
+            self.desno = not self.desno
+        if not self.dead and self.x <= 0:
+            self.dx = 1  # mijenja stranu kad takne lijevu stranu
+            self.desno = True
+        elif not self.dead and self.x >= pogled.ogranicenjeX:
+            self.dx = -1  # mijenja stranu kad takne desnu stranu
+            self.desno = False
 
-    self.shotTimer += 1  # svaki frame se povecava za 1
+        self.shotTimer += 1  # svaki frame se povecava za 1
 
     # gravitacija
     if self.y+self.vsp>=self.minY or self.ProvjeriKolizije(0, self.vsp + 1):
@@ -1165,9 +1168,7 @@ def IgrajLevel():
             enemy.y -= LEVEL_HEIGHT*tile_size
     collidables = DefinirajKolizije([player, levelEnemies, metci, projectiles], level, LEVEL_HEIGHT)
     for enemy in levelEnemies:
-        if enemy != hacked_enemy:
-            enemy.movement(collidables)
-    enemy.render()
+        enemy.movement(collidables)
     for projektil in projectiles:
         projektil.movement()
         Projectile.MetakCheck(projektil, collidables)
