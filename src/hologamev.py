@@ -9,6 +9,8 @@
 
 state='menu' #varijabla za game state
 level = 0 # koji level je ucitan (od 0 pa na dalje)
+hacked_enemy = None
+player_backup = None
 
 def TIC():
  update_keys()
@@ -23,6 +25,7 @@ def TIC():
      print("Keys (AD) for moving left and right", 0, 16)
      print("Keys (WS) for moving up and down by laders", 0, 24)
      print("Key (B) for jump, key (E) for weapon change", 0, 32)
+     print("Key (shift) for dash", 0, 32)
      print("Key (F) for shooting. Be aware of lava nad spikes!!!", 0, 40)
      print("Touching the enemy also decreases health!!!", 0, 48)
  elif state=='menu':
@@ -39,7 +42,7 @@ prev_key_space = False
 prev_key_switch = False
 
 def update_keys():
-    global key_space, key_left, key_right, key_up, key_down, key_shoot, key_switch, key_dash
+    global key_space, key_left, key_right, key_up, key_down, key_shoot, key_switch, key_dash, key_hack, key_return, key_selfdestruct 
     global prev_key_space, prev_key_switch, prev_key_dash
 
     current_key_space = key(48) # 'SPACE' ili 'START' ili 'B' na gamepadu (prirodno skakati na B, a birati na 'START')
@@ -55,7 +58,9 @@ def update_keys():
     key_up = key(23) # 'W' ili gore na gamepadu
     key_down = key(19) # 'S' ili dolje na gamepadu
     key_shoot = key(6) # 'F' ili 'A' na gamepadu
-
+    key_hack = key(8) # 'H'
+    key_selfdestruct = key(7) # 'G'
+    key_return = key(18) #'R'
     prev_key_space = current_key_space
     prev_key_switch = current_key_switch
     prev_key_dash = current_key_dash
@@ -183,6 +188,7 @@ class player:
 
 
     def PlayerKontroler(self, coll):
+        global hacked_enemy, player_backup
         self.coll=coll
         self.CheckOnLadders(self)
         player.Hitters(player, enemies)
@@ -276,6 +282,16 @@ class player:
         elif self.on_ladders:
             if key_up or key_down:
                 self.spriteTimer += 0.1
+        
+        if key_hack:
+            for enemys in enemies:
+                for enemy in enemys:
+                    if not enemy.dead and abs(self.x - enemy.x) < 16 and abs(self.y - enemy.y) < 16:
+                        hacked_enemy = enemy
+                        player_backup = player
+                        return
+        
+
 
         #renderanje spritea
         if self.on_ladders:
@@ -288,6 +304,8 @@ class player:
             else:
                 spr(self.frame,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,int(self.desno==False),0,2,2)
 
+        if hacked_enemy:
+            return  # Skip player control if we're hacked into an enemy
 
         if self.hitTimer > self.hitVar:
             self.hitVar += 1
@@ -348,7 +366,32 @@ class player:
             player.enemyHit = False
 #lista projektila
 projectiles = []
+def HackedEnemyController(enemy, coll):
+    enemy.coll = coll
+    if key_left:
+        enemy.x -= 2
+        enemy.desno = False
+    elif key_right:
+        enemy.x += 2
+        enemy.desno = True
+    if key_up:
+        enemy.y -= 2
+    elif key_down:
+        enemy.y += 2
+    if key_selfdestruct:
+        sfx(8, "C-4", 20, 0, 5, 0)
+        enemy.dead = True
+        ReturnToPlayer()
+    if key_return:
+        ReturnToPlayer()
 
+def ReturnToPlayer():
+    global hacked_enemy, player, player_backup
+    hacked_enemy = None
+    if player_backup:
+        player = player_backup
+def RenderInactivePlayer():
+    spr(256, int(player.x) - int(pogled.x), int(player.y) - int(pogled.y), 14, 1, 0, 0, 2, 2)        
 class Enemy:
   x = 90 
   y = 90
@@ -419,6 +462,14 @@ class Enemy:
     elif not self.dead:
       spr(320,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,1,0,2,2)
 
+
+  def render(self):#samo za kada je enemy hakiran
+    if self.dead:
+        return
+    if self.desno:
+        spr(320, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 15, 1, 0, 0, 2, 2)
+    else:
+        spr(320, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 15, 1, 1, 0, 2, 2)
   def shootProjectile(self):
     projectile = Projectile(self.x + 5, int(self.y)) 
 
@@ -1114,12 +1165,19 @@ def IgrajLevel():
             enemy.y -= LEVEL_HEIGHT*tile_size
     collidables = DefinirajKolizije([player, levelEnemies, metci, projectiles], level, LEVEL_HEIGHT)
     for enemy in levelEnemies:
-        enemy.movement(collidables)
+        if enemy != hacked_enemy:
+            enemy.movement(collidables)
+    enemy.render()
     for projektil in projectiles:
         projektil.movement()
         Projectile.MetakCheck(projektil, collidables)
     Puska.Pucanje()
-    player.PlayerKontroler(player, collidables)
+    global hacked_enemy
+    if hacked_enemy:
+        HackedEnemyController(hacked_enemy, collidables)
+        RenderInactivePlayer()
+    else:
+        player.PlayerKontroler(player, collidables)
     pogled.pratiIgraca()
     for metak in metci:
         Metak.MetakCheck(metak, collidables, enemies)
