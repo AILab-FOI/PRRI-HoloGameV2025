@@ -44,7 +44,7 @@ def update_keys():
 
     current_key_space = key(48) # 'SPACE' ili 'START' ili 'B' na gamepadu (prirodno skakati na B, a birati na 'START')
     current_key_switch = key(5) # 'E' ili 'SELECT' na gamepadu
-    current_key_dash = key(42)
+    current_key_dash = key(64)
 
     key_space = current_key_space and not prev_key_space
     key_switch = current_key_switch and not prev_key_switch
