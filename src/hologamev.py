@@ -149,7 +149,7 @@ class player:
     coll=[]
     spriteTimer = 0
     on_ladders = False
-
+    dash_timer = 0 
     def ProvjeriKolizije(self, xdodatak, ydodatak):
         self.x += xdodatak
         self.y += ydodatak
@@ -229,13 +229,21 @@ class player:
         else:
             self.hsp=pomakni(self.hsp,0,self.akceleracija)
             self.is_walking = False
-            
-        if key_dash:
-            dash_speed = 5  # Set the dash speed (adjust as needed)
+        #dash   
+        if key_dash and self.dash_timer == 0:  
+            dash_speed = 5
             if self.desno:
                 self.hsp = dash_speed
             else:
                 self.hsp = -dash_speed
+            self.dash_timer = 60
+
+        # smanji timer na dash-u
+        if self.dash_timer > 0:
+            self.dash_timer -= 1  
+            if self.dash_timer == 0:
+                self.hsp = 0
+
         #gravitacija i kolizije
         if self.y+self.vsp>=self.minY or self.ProvjeriKolizije(self, 0, self.vsp + 1):
             if self.vsp > 0:
