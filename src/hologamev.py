@@ -100,7 +100,7 @@ def DefinirajKolizije(listaObjekata, level, level_height):
         for xx in range(sirinaKolizija):
             for yy in range(sirinaKolizija):
                 tileHere = mget(xx + px, yy + py + level*level_height)
-                if tileHere != 0 and tileHere not in level_finish_tile_indexes and tileHere not in background_tile_indexes:
+                if tileHere != 0 and tileHere not in level_finish_tile_indexes and tileHere not in level_locked_tile_indexes and tileHere not in background_tile_indexes:
                     pos_key = ("x", xx + px, "y", yy + py)
                     if pos_key not in collidables:
                         collidables[pos_key] = collidable((xx + px)*tile_size, (yy + py)*tile_size, tile_size, tile_size)
@@ -112,7 +112,7 @@ def DefinirajKolizije(listaObjekata, level, level_height):
               for xx in range(sirinaKolizija):
                for yy in range(sirinaKolizija):
                 tileHere = mget(xx + px, yy + py + level*level_height)
-                if tileHere != 0 and tileHere not in level_finish_tile_indexes and tileHere not in background_tile_indexes:
+                if tileHere != 0 and tileHere not in level_finish_tile_indexes and tileHere not in level_locked_tile_indexes and tileHere not in background_tile_indexes:
                     pos_key = ("x", xx + px, "y", yy + py)
                     if pos_key not in collidables:
                         collidables[pos_key] = collidable((xx + px)*tile_size, (yy + py)*tile_size, tile_size, tile_size)
@@ -1200,20 +1200,31 @@ def IgrajLevel():
     ProvjeravajJeLiIgracULavi()
     ProvjeravajJeLiIgracNaSiljku()
 
-def ProvjeravajJeLiIgracKodVrata(): # sluzi za kraj levela
+def ProvjeravajJeLiIgracKodVrata():
     tile_size = 8
-    kojiTile = mget(round(player.x/tile_size), round(player.y/tile_size) + level*LEVEL_HEIGHT)
+    # center‑foot tile
+    center_tx = int((player.x + player.width / 2) / tile_size)
+    ty = int((player.y + player.height - 1 ) / tile_size)
+    map_y = ty + level * LEVEL_HEIGHT
+
+    # left and right tiles
+    left_tx  = center_tx - 2
+    right_tx = center_tx + 1
+
+    for tx in (left_tx, right_tx):
+        tile = mget(tx, map_y)
+
+        # locked door?
+        if tile in level_locked_tile_indexes:
+            print("[!] Vrata su zaključana", 10, 10, 12)
+            return
+
+        # finish door?
+        if tile in level_finish_tile_indexes:
+            sfx(16, "C-4", 15, 0, 2, 1)
+            ZavrsiLevel()
+            return
     
-    # ako su vrata zakljucana, zabrani ulaz i ispisi poruku
-    if kojiTile in level_locked_tile_indexes:
-        print("[!] Vrata su zaključana", 30, 70, 8, True, 1, False)
-        return
-    
-    # ako su vrata otkljucana dopusti promjenu levela
-    if kojiTile in level_finish_tile_indexes:
-        sfx(16, "C-4", 15, 0, 2, 1)
-        ZavrsiLevel()
-        
 def ProvjeravajJeLiIgracULavi():
     tile_size = 8
     kojiTile = mget(round(player.x/tile_size), round(player.y/tile_size) + level*LEVEL_HEIGHT)
