@@ -131,7 +131,7 @@ def pomakni(a, b, vrijednost):
         return max(a - vrijednost, b)
 
 ladder_tile_indexes = [
-    48, 49, 64, 65, 80, 81, 96, 97
+    13, 14, 29, 30, 45, 46, 61, 62
 ]
 
 class player: 
@@ -1102,40 +1102,41 @@ def test( a, b ):
 
 player_starting_positions = [ # pocetna pozicija igraca za svaki level (u map editoru se prikazuje):
     [2, 12], # level 0
-    [5, 28], # level 1
+    [3, 24], # level 1
     [9, 44], # level 2
     [3, 63], # level 3
     [3, 72] # nepostojeci opet peti level
 ]
 level_finish_tile_indexes = [ # indexi tileova sa vratima za zavrsetak levela
-    50, 51, 52, 
-    66, 67, 68, 
-    82, 83, 84,
-    211, 212, 213, 
-    227, 228, 229, 
-    243, 244, 245
+    70,71,72,
+    86,87,88,
+    102,103,104
 ]
 
 level_locked_tile_indexes = [ # indexi tileova sa zakljucanim vratima
-    161, 162, 163,
-    177, 178, 179,
-    193, 194, 195
+    
 ]
 
 background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraju koliziju (pozadinski elementi)
-	69, 70, 71, 
-	56, 57, 58, 72, 73, 74, 
+	4,5,6,7,8,9,
+    16,20,21,22,24,25,26,27,32, 33, 34, 35,
+    37,38,39,40,55,56,
+    64,65,66,80,81,82,
+    44,60, #zvijezde
+    13,14,29,30,45,46,61,62, # ljestve
+    76,77,92,93,108,109,124,125,140,141,156,157,172,173,#"hotel"
+    2,3,18,19,#box
+    116,132,123,107,#spikes
+    48,50,51, 52, 36, 41, 69, 70, 71, 
+	56, 57, 58, 72, 
 	85, 86, 87, 
 	102, 103,
     88, 89, 90,
-    118, 119, 120, # zuti stol, no ima problem jer neki leveli koriste sredinu stola za platformu
-    48, 49, 64, 65, 80, 81, 96, 97, # ljestve
-    104, 11, 30,
+    104, 30,
     59, 231, 247,
     219, 220, 221, 222, 223, # oni "ormarici"
     235, 236, 237, 238, 239,
     251, 252, 253, 254, 255,
-    133, 134, # torta
 ]
 enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koja)
     [Enemy(77, 14)], # level 0
@@ -1153,7 +1154,7 @@ lava = [ # tile lave
     59
 ]
 spikes = [ # tileovi spikeova
-    231, 247
+    116,132,123,107
 ]
 
 # sljedece varijable NE MIJENJATI:
