@@ -530,7 +530,7 @@ class Projectile:
       self.x = self.x - self.speed
 
     #crtanje sebe
-    spr(104, self.x - int(pogled.x), self.y - int(pogled.y), 0, 1, 0, 0, 1, 1)
+    spr(363, self.x - int(pogled.x), self.y - int(pogled.y), 0, 1, 0, 0, 1, 1)
       
   def MetakCheck(metak, colls):
             metak.coll=colls
@@ -1125,7 +1125,7 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     44,60, #zvijezde
     13,14,29,30,45,46,61,62, # ljestve
     76,77,92,93,108,109,124,125,140,141,156,157,172,173,#"hotel"
-    2,3,18,19,#box
+    2,3,#18,19,#box
     116,132,123,107,#spikes
     48,50,51, 52, 36, 41, 69, 70, 71, 
 	56, 57, 58, 72, 
@@ -1139,8 +1139,8 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     251, 252, 253, 254, 255,
 ]
 enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koja)
-    [Enemy(77, 14)], # level 0
-    [Enemy(60, 30),Enemy(79, 30), Enemy(182, 35)], # level 1
+    [Enemy(48, 13)], # level 0
+    [Enemy(21, 30),Enemy(43, 30), Enemy(182, 35)], # level 1
     [Enemy2(139, 46), Enemy2(79, 46), Enemy2(58, 46), Enemy2(127, 46), Enemy2(184, 46), Enemy2(174, 46)], # level 2
     [Enemy3(64, 62), Enemy3(154, 56), Enemy3(167, 61), Enemy3(206, 65), Enemy3(197, 65)] # level 3
 ]
