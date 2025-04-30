@@ -1154,7 +1154,7 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     44,60, #zvijezde
     13,14,29,30,45,46,61,62, # ljestve
     76,77,92,93,108,109,124,125,140,141,156,157,172,173,#"hotel"
-    2,3,#18,19,#box
+    #2,3,#18,19,#box
     116,132,123,107,#spikes
     48,50,51, 52, 36, 41, 69, 70, 71, 
 	56, 57, 58, 72, 
@@ -1288,6 +1288,7 @@ def ZavrsiLevel():
     else:
         global state
         state = 'win'
+
 
 def VratiSeNaPrethodniLevel():
     global level
