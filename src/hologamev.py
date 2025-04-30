@@ -633,9 +633,9 @@ class Enemy2(Enemy):
 
     #crtanje samog sebe
     if not self.dead and self.desno==True:
-      spr(326,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,0,0,2,2)
+      spr(330,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,0,0,2,2)
     elif not self.dead:
-      spr(326,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,1,0,2,2)
+      spr(330,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,1,0,2,2)
 
   def shootProjectile(self):
     projectile = Projectile(self.x + 5, int(self.y)) 
@@ -1067,7 +1067,34 @@ class Puska:
             else:
                 metak.x = metak.x - metak.speed
 
+class Kartica:
+    sprite = 420
+    x = -1
+    y = -1
+
+    pokupio = False  # da li je kartica već pokupjena
+
+    def __init__(self, x, y):
+        tile_size = 8
+        self.x = x * tile_size
+        self.y = y * tile_size
+
+    def prikazi(self):
+        # Prikaži samo ako nije već pokupio
+        if not self.pokupio:
+            spr(self.sprite, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
+
+    def provjeri_pickup(self):
+        if not self.pokupio and self.x < player.x + player.width and self.y < player.y + player.height and self.x > player.x - player.width + 8 and self.y > player.y - player.height:
+            sfx(14, "D-3", 3, 0, 2, 2)  # zvuk za uzimanje kartice
+            self.pokupio = True
+            global flag_za_vrata
+            flag_za_vrata = True  # otključaj vrata
             
+    def PickUp(self):  # alias za kompatibilnost
+        self.prikazi()
+        self.provjeri_pickup()
+          
 class PromjenaPuska:
     puskaBr = 0
     puskaSpr = 376
@@ -1140,12 +1167,12 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
 ]
 enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koja)
     [Enemy(48, 13)], # level 0
-    [Enemy(21, 30),Enemy(43, 30), Enemy(182, 35)], # level 1
+    [Enemy(21, 30),Enemy(43, 30)], # level 1
     [Enemy2(139, 46), Enemy2(79, 46), Enemy2(58, 46), Enemy2(127, 46), Enemy2(184, 46), Enemy2(174, 46)], # level 2
     [Enemy3(64, 62), Enemy3(154, 56), Enemy3(167, 61), Enemy3(206, 65), Enemy3(197, 65)] # level 3
 ]
 pickups = [ # pocetna pozicija pick up pusaka za svaki level (u editoru se ispisuje koja)
-    [], # level 0
+    [Kartica(33,6)], # level 0
     [PromjenaPuska(130, 22, 1)], # level 1
     [PromjenaPuska(168, 40, 2)], # level 2
     [] # level 3
