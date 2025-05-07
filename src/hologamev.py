@@ -1122,6 +1122,43 @@ class Kartica:
         self.prikazi()
         self.provjeri_pickup()
 
+class Platforma(collidable):
+    def __init__(self, x, y):
+        tile_size = 8
+        self.x = x * tile_size
+        self.y = y * tile_size
+        self.width = tile_size
+        self.height = tile_size
+        self.fall_timer = 0
+        self.falling = False
+        self.dead = False
+        self.vsp = 0
+        self.gravity = 0.3
+
+    def update(self):
+        if self.dead:
+            return       
+        if  player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling:
+            self.fall_timer += 1
+            if self.fall_timer > 60:  # after 1 second
+                self.falling = True
+        else:
+            self.fall_timer = 0
+
+        if self.falling:
+            self.vsp += self.gravity
+            self.y += self.vsp
+            tile_size = 8
+            tx = int(self.x / tile_size)
+            ty = int((self.y + self.height - 1) / tile_size) + level * LEVEL_HEIGHT
+            tile = mget(tx, ty)
+
+            if tile in spikes:
+                self.dead = True
+    def draw(self):
+        if not self.dead:
+            spr(1, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
+            
 class PromjenaPuska:
     puskaBr = 0
     puskaSpr = 376
@@ -1195,6 +1232,12 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     235, 236, 237, 238, 239,
     251, 252, 253, 254, 255,
 ]
+falling_platforms_by_level = [
+    [Platforma(19, 10)],  # level 0
+    [],  # level 1
+    [],  # level 2
+    [],  # level 3
+]
 enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koja)
     [Enemy(48, 13)], # level 0
     [Enemy(21, 30),Enemy(43, 30)], # level 1
@@ -1218,6 +1261,8 @@ spikes = [ # tileovi spikeova
 LEVEL_HEIGHT = 17
 
 def ZapocniLevel(level): # poziva se u menu.py kada se odabere opcija da se uđe u level
+    global falling_platforms
+    falling_platforms = falling_platforms_by_level[level]
     tile_size = 8
     starting_pos = player_starting_positions[level]
     player.x = starting_pos[0]*tile_size
@@ -1239,7 +1284,7 @@ def IgrajLevel():
     for enemy in levelEnemies:
         while (enemy.y > LEVEL_HEIGHT*tile_size):
             enemy.y -= LEVEL_HEIGHT*tile_size
-    collidables = DefinirajKolizije([player, levelEnemies, metci, projectiles], level, LEVEL_HEIGHT)
+    collidables = DefinirajKolizije([player, levelEnemies, metci, projectiles, falling_platforms], level, LEVEL_HEIGHT)
     for enemy in levelEnemies:
         enemy.movement(collidables)
     for projektil in projectiles:
@@ -1270,6 +1315,9 @@ def IgrajLevel():
     ProvjeravajJeLiIgracKodVrata()
     ProvjeravajJeLiIgracULavi()
     ProvjeravajJeLiIgracNaSiljku()
+    for platform in falling_platforms:
+        platform.update()
+        platform.draw()
 
 def ProvjeravajJeLiIgracKodVrata():
     tile_size = 8
