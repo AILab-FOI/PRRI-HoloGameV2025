@@ -11,6 +11,7 @@ state='menu' #varijabla za game state
 level = 0 # koji level je ucitan (od 0 pa na dalje)
 hacked_enemy = None
 player_backup = None
+hack_start_level = None
 
 def TIC():
  update_keys()
@@ -189,7 +190,7 @@ class player:
 
 
     def PlayerKontroler(self, coll):
-        global hacked_enemy, player_backup
+        global hacked_enemy, player_backup, hack_start_level
         self.coll=coll
         self.CheckOnLadders(self)
         player.Hitters(player, enemies)
@@ -298,6 +299,7 @@ class player:
                     if not enemy.dead and abs(self.x - enemy.x) < 16 and abs(self.y - enemy.y) < 16:
                         hacked_enemy = enemy
                         player_backup = player
+                        hack_start_level = level 
                         return
         
 
@@ -377,6 +379,7 @@ class player:
 projectiles = []
 def HackedEnemyController(enemy, coll):
     enemy.coll = coll
+    global hacked_enemy, player_backup, level
     if key_left:
         enemy.x -= 2
         enemy.desno = False
@@ -392,13 +395,37 @@ def HackedEnemyController(enemy, coll):
         enemy.dead = True
         ReturnToPlayer()
     if key_return:
-        ReturnToPlayer()
+        ReturnToPlayer() 
+    tile_size = 8
+    teleport_tile_index = 145  
+    desired_x, desired_y = 78, 28 
+
+    center_x = int((enemy.x + enemy.width // 2) / tile_size)
+    foot_y   = int((enemy.y + enemy.height - 1) / tile_size)
+    map_y = foot_y + level * LEVEL_HEIGHT
+    tile_under = mget(center_x, map_y)
+    print(f"[DEBUG] Enemy Tile: index={tile_under} at ({center_x}, {foot_y})")
+    if tile_under == teleport_tile_index:
+        level += 1
+        ZapocniLevel(level)
+        enemy.x = desired_x * tile_size
+        enemy.y = (desired_y - level * LEVEL_HEIGHT) * tile_size
+    enemy.vsp += enemy.gravitacija
+    tile_size = 8
 
 def ReturnToPlayer():
-    global hacked_enemy, player, player_backup
+    global hacked_enemy, player, player_backup, level, hack_start_level
     hacked_enemy = None
+
     if player_backup:
         player = player_backup
+
+    if hack_start_level is not None and level != hack_start_level:
+        level = hack_start_level
+        ZapocniLevel(level)
+
+    hack_start_level = None
+
 def RenderInactivePlayer():
     spr(256, int(player.x) - int(pogled.x), int(player.y) - int(pogled.y), 14, 1, 0, 0, 2, 2)        
 class Enemy:
@@ -1094,7 +1121,7 @@ class Kartica:
     def PickUp(self):  # alias za kompatibilnost
         self.prikazi()
         self.provjeri_pickup()
-          
+
 class PromjenaPuska:
     puskaBr = 0
     puskaSpr = 376
@@ -1223,9 +1250,14 @@ def IgrajLevel():
     if hacked_enemy:
         HackedEnemyController(hacked_enemy, collidables)
         RenderInactivePlayer()
+        if hacked_enemy:
+            hacked_enemy.render()
+            pogled.prati(hacked_enemy)
+        else:
+            pogled.pratiIgraca()
     else:
         player.PlayerKontroler(player, collidables)
-    pogled.pratiIgraca()
+        pogled.pratiIgraca()
     for metak in metci:
         Metak.MetakCheck(metak, collidables, enemies)
     for metak in projectiles:
@@ -1256,7 +1288,7 @@ def ProvjeravajJeLiIgracKodVrata():
         # locked door?
         if tile in level_locked_tile_indexes:
             if flag_za_vrata:
-                VratiSeNaPrethodniLevel()
+                ZavrsiLevel()
             else:
                 print("You need a card for this door", 10, 10, 12)
             return
@@ -1297,7 +1329,7 @@ def VratiSeNaPrethodniLevel():
         level -= 1
         ZapocniLevel(level)
     else:
-        print("Već si na prvom levelu!", 10, 10, 12)
+        print("You're on the first level", 10, 10, 12)
 
 def HUD():
     rect(0, 0, 240, 8, 0)
