@@ -230,6 +230,8 @@ class player:
         else:
             self.hsp=pomakni(self.hsp,0,self.akceleracija)
             self.is_walking = False
+        
+
         #dash   
         if key_dash and self.dash_timer == 0:  
             dash_speed = 5
@@ -260,6 +262,7 @@ class player:
         if self.vsp<0:
             if self.ProvjeriKolizije(self, 0, self.vsp - 1):
                 self.vsp=0
+
 
         #pomicanje po ljestvama
         if self.on_ladders:
@@ -636,6 +639,7 @@ class Enemy2(Enemy):
     elif not self.dead and self.x >= pogled.ogranicenjeX:
       self.dx = -1  # mijenja stranu kad takne desnu stranu
       self.desno = False
+      
 
     self.shotTimer += 1  # svaki frame se povecava za 1
 
@@ -1137,14 +1141,27 @@ class Platforma(collidable):
 
     def update(self):
         if self.dead:
-            return       
-        if  player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling:
+            return
+
+        # Player collision from above
+        if (
+            player.vsp > 0 and player.x + player.width > self.x and player.x < self.x + self.width and player.y + player.height <= self.y and abs(player.y + player.height - self.y) < 4 and not self.falling
+        ):
+            # Land the player
+            player.y = self.y - player.height
+            player.vsp = 0
+            player.on_ground = True
+
+        # Start platform falling timer if player is standing on it
+        if (
+            player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling):
             self.fall_timer += 1
             if self.fall_timer > 60:  # after 1 second
                 self.falling = True
         else:
             self.fall_timer = 0
 
+        # Apply gravity if falling
         if self.falling:
             self.vsp += self.gravity
             self.y += self.vsp
@@ -1152,12 +1169,14 @@ class Platforma(collidable):
             tx = int(self.x / tile_size)
             ty = int((self.y + self.height - 1) / tile_size) + level * LEVEL_HEIGHT
             tile = mget(tx, ty)
-
+            
             if tile in spikes:
                 self.dead = True
+
     def draw(self):
         if not self.dead:
             spr(1, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
+
             
 class PromjenaPuska:
     puskaBr = 0
