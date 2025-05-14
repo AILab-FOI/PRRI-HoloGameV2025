@@ -1143,35 +1143,49 @@ class Platforma(collidable):
         if self.dead:
             return
 
-        # Player collision from above
-        if (
-            player.vsp > 0 and player.x + player.width > self.x and player.x < self.x + self.width and player.y + player.height <= self.y and abs(player.y + player.height - self.y) < 4 and not self.falling
-        ):
-            # Land the player
+        if (player.vsp > 0 and player.x + player.width > self.x and player.x < self.x + self.width and player.y + player.height <= self.y and abs(player.y + player.height - self.y) < 4 and not self.falling):
             player.y = self.y - player.height
             player.vsp = 0
             player.on_ground = True
 
-        # Start platform falling timer if player is standing on it
-        if (
-            player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling):
+ 
+        if (player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling):
             self.fall_timer += 1
-            if self.fall_timer > 60:  # after 1 second
+            if self.fall_timer > 60:
                 self.falling = True
         else:
             self.fall_timer = 0
 
-        # Apply gravity if falling
+
         if self.falling:
             self.vsp += self.gravity
             self.y += self.vsp
-            tile_size = 8
-            tx = int(self.x / tile_size)
-            ty = int((self.y + self.height - 1) / tile_size) + level * LEVEL_HEIGHT
-            tile = mget(tx, ty)
-            
-            if tile in spikes:
-                self.dead = True
+
+
+        if not self.falling and not self.dead:
+            if ( player.x < self.x + self.width and player.x + player.width > self.x and player.y < self.y + self.height and player.y + player.height > self.y ):
+                # compute penetration depths
+                dx1 = (self.x + self.width) - player.x
+                dx2 = (player.x + player.width) - self.x
+                dy1 = (self.y + self.height) - player.y
+                dy2 = (player.y + player.height) - self.y
+
+                # find smallest overlap
+                overlap_x = dx1 if dx1 < dx2 else -dx2
+                overlap_y = dy1 if dy1 < dy2 else -dy2
+
+                # resolve along the axis of least penetration
+                if abs(overlap_x) < abs(overlap_y):
+                    # push player horizontally
+                    player.x += overlap_x
+                    player.hsp = 0
+                else:
+                    # push player vertically
+                    player.y += overlap_y
+                    player.vsp = 0
+                    # if we pushed them up onto the platform, set grounded
+                    if overlap_y < 0:
+                        player.on_ground = True
 
     def draw(self):
         if not self.dead:
