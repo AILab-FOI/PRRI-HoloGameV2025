@@ -1296,7 +1296,7 @@ enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koj
 ]
 pickups = [ # pocetna pozicija pick up pusaka za svaki level (u editoru se ispisuje koja)
     [Kartica(33,6,'red')], # level 0
-    [PromjenaPuska(130, 22, 1)], # level 1
+    [PromjenaPuska(130, 22, 1), Kartica(231,25,'green')], # level 1
     [PromjenaPuska(168, 40, 2)], # level 2
     [] # level 3
 ]
