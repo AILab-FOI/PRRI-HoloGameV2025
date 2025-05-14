@@ -1152,7 +1152,7 @@ class Platforma(collidable):
  
         if (player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling):
             self.fall_timer += 1
-            if self.fall_timer > 60:
+            if self.fall_timer > 7:
                 self.falling = True
         else:
             self.fall_timer = 0
