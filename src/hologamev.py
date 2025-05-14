@@ -1100,32 +1100,48 @@ class Puska:
                 metak.x = metak.x - metak.speed
 flag_za_vrata = False
 class Kartica:
-    sprite = 420
-    x = -1
-    y = -1
-
-    pokupio = False  # da li je kartica već pokupjena
-
-    def __init__(self, x, y):
+    def __init__(self, x, y, tip='red'):
         tile_size = 8
         self.x = x * tile_size
         self.y = y * tile_size
+        self.pokupio = False
+
+        # Postavi tip i pripadajući sprite
+        self.tip = tip
+        if self.tip == 'red':
+            self.sprite = 420  # sprite za crvenu karticu
+        elif self.tip == 'green':
+            self.sprite = 436  # sprite za zelenu karticu
+        else:
+            raise ValueError(f"Nepoznat tip kartice: {tip}")
 
     def prikazi(self):
-        # Prikaži samo ako nije već pokupio
+        # Prikaži samo ako nije već pokupljena
         if not self.pokupio:
-            spr(self.sprite, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
+            spr(self.sprite,
+                int(self.x) - int(pogled.x),
+                int(self.y) - int(pogled.y),
+                0, 1, 0, 0, 1, 1)
 
     def provjeri_pickup(self):
-        if not self.pokupio and self.x < player.x + player.width and self.y < player.y + player.height and self.x > player.x - player.width + 8 and self.y > player.y - player.height:
-            sfx(14, "D-3", 3, 0, 2, 2)  # zvuk za uzimanje kartice
+        # Provjera kolizije s igračem
+        if (not self.pokupio and self.x < player.x + player.width and self.y < player.y + player.height and self.x > player.x - player.width + 8 and self.y > player.y - player.height):
+            # Zvuk uzimanja kartice
+            sfx(14, "D-3", 3, 0, 2, 2)
             self.pokupio = True
-            global flag_za_vrata
-            flag_za_vrata = True  # otključaj vrata
 
-    def PickUp(self):  # alias za kompatibilnost
+            # Postavi globalne zastavice po boji kartice
+            global flag_za_vrata, flag_za_zelena_vrata
+            if self.tip == 'red':
+                flag_za_vrata = True
+            elif self.tip == 'green':
+                flag_za_zelena_vrata = True
+
+    # Alias za dosadašnju kompatibilnost
+    def PickUp(self):
         self.prikazi()
-        self.provjeri_pickup()
+        self.provjeri_pickup()  
+
 
 class Platforma(collidable):
     def __init__(self, x, y):
@@ -1279,7 +1295,7 @@ enemies = [ # pocetne pozicije enemyja za svaki level (u editoru se ispisuje koj
     [Enemy3(64, 62), Enemy3(154, 56), Enemy3(167, 61), Enemy3(206, 65), Enemy3(197, 65)] # level 3
 ]
 pickups = [ # pocetna pozicija pick up pusaka za svaki level (u editoru se ispisuje koja)
-    [Kartica(33,6)], # level 0
+    [Kartica(33,6,'red')], # level 0
     [PromjenaPuska(130, 22, 1)], # level 1
     [PromjenaPuska(168, 40, 2)], # level 2
     [] # level 3
