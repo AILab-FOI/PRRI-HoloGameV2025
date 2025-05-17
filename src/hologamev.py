@@ -1283,6 +1283,7 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     219, 220, 221, 222, 223, # oni "ormarici"
     235, 236, 237, 238, 239,
     251, 252, 253, 254, 255,
+    185,186,187,188,201,202,203,204,217,218,219,220 #doctor
 ]
 falling_platforms_by_level = [
     [Platforma(19, 10)],  # level 0
