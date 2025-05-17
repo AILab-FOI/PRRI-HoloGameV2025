@@ -12,6 +12,7 @@ level = 0 # koji level je ucitan (od 0 pa na dalje)
 hacked_enemy = None
 player_backup = None
 hack_start_level = None
+prev_key_shoot = False
 
 def TIC():
  update_keys()
@@ -382,7 +383,9 @@ class player:
 projectiles = []
 def HackedEnemyController(enemy, coll):
     enemy.coll = coll
-    global hacked_enemy, player_backup, level
+    global hacked_enemy, player_backup, level, key_shoot, prev_key_shoot
+    
+    # Movement controls
     if key_left:
         enemy.x -= 2
         enemy.desno = False
@@ -393,28 +396,43 @@ def HackedEnemyController(enemy, coll):
         enemy.y -= 2
     elif key_down:
         enemy.y += 2
+        
+    # Handle shooting cooldown
+    if enemy.shootCooldown > 0:
+        enemy.shootCooldown -= 1
+        
+    # Shooting only on F key press with cooldown
+    current_key_shoot = key(6) # 'F' key
+    key_shoot_pressed = current_key_shoot and not prev_key_shoot
+    prev_key_shoot = current_key_shoot
+    
+    if key_shoot_pressed and enemy.shootCooldown <= 0:
+        enemy.shootProjectile()
+        enemy.shootCooldown = 15 # Cooldown frames (adjust as needed)
+        sfx(7, "D-2", 3, 0, 2, 3)  # Shooting sound
+        
     if key_selfdestruct:
         sfx(8, "C-4", 20, 0, 5, 0)
         enemy.dead = True
         ReturnToPlayer()
     if key_return:
         ReturnToPlayer() 
+        
+    # Level transition logic
     tile_size = 8
     teleport_tile_index = 145  
     desired_x, desired_y = 78, 28 
 
     center_x = int((enemy.x + enemy.width // 2) / tile_size)
-    foot_y   = int((enemy.y + enemy.height - 1) / tile_size)
+    foot_y = int((enemy.y + enemy.height - 1) / tile_size)
     map_y = foot_y + level * LEVEL_HEIGHT
     tile_under = mget(center_x, map_y)
-    print(f"[DEBUG] Enemy Tile: index={tile_under} at ({center_x}, {foot_y})")
     if tile_under == teleport_tile_index:
         level += 1
         ZapocniLevel(level)
         enemy.x = desired_x * tile_size
         enemy.y = (desired_y - level * LEVEL_HEIGHT) * tile_size
     enemy.vsp += enemy.gravitacija
-    tile_size = 8
 
 def ReturnToPlayer():
     global hacked_enemy, player, player_backup, level, hack_start_level
@@ -450,9 +468,23 @@ class Enemy:
   dead = False
 
   def __init__(self, x, y):
-    tile_size = 8
-    self.x = x*tile_size
-    self.y = y*tile_size
+        tile_size = 8
+        self.x = x*tile_size
+        self.y = y*tile_size
+        self.width = 16
+        self.height = 16
+        self.sprite = 1  
+        self.dx = -1  
+        self.vsp = 0
+        self.gravitacija = 0.3
+        self.skokJacina = 3
+        self.minY = 120
+        self.desno = False
+        self.coll = []
+        self.health = 2
+        self.dead = False
+        self.shootCooldown = 0  # Only need cooldown for manual shooting
+
 
   def movement(self, coll):
     self.coll = coll
@@ -512,7 +544,7 @@ class Enemy:
     else:
         spr(320, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 15, 1, 1, 0, 2, 2)
   def shootProjectile(self):
-    projectile = Projectile(self.x + 5, int(self.y)) 
+    projectile = Projectile(self.x + 5, int(self.y), shooter=self)
 
     projectile.desno = self.desno
     # doda projektil u listu
@@ -543,7 +575,7 @@ class Projectile:
   width=4
   height=4
   
-  def __init__(self, x, y, _speed = 5):  # konstruktor klase
+  def __init__(self, x, y, _speed = 5, shooter=None):  # konstruktor klase
     self.x = x
     self.y = y
     self.dx = 1 
@@ -552,6 +584,8 @@ class Projectile:
     self.desno = True
     self.width = 4
     self.height = 4
+    self.coll = []
+    self.shooter = shooter 
   
   def movement(self):
     if self.desno == True:
@@ -571,6 +605,16 @@ class Projectile:
                     del metak
                 else:
                     del metak
+            elif hasattr(metak, 'shooter') and metak.shooter == hacked_enemy:
+                for enemys in enemies[level]:
+                    if enemys.dead or enemys == hacked_enemy:
+                        continue
+                    if metak.x < enemys.x + enemys.width and metak.y < enemys.y + enemys.height and metak.x > enemys.x - enemys.width and metak.y > enemys.y - enemys.height:
+                        enemys.Pogoden(1, 0)
+                        if metak in projectiles:
+                            projectiles.remove(metak)
+                        del metak
+                        return
             elif metak.x < player.x + player.width and metak.y < player.y + player.height and metak.x > player.x - player.width + 8 and metak.y > player.y - player.height:
                 if metak in projectiles:
                     player.Pogoden(player, 1) # damage ovdje ide ako cemo ga mijenjati 
@@ -579,9 +623,6 @@ class Projectile:
                 else:
                     del metak
             # ako je pogoden player (elif)
-              
-    
-  # 1-2.-3 5---8.---11
     
   def ProvjeriKolizije(self, xdodatak, ydodatak):
         self.x += xdodatak
@@ -669,7 +710,7 @@ class Enemy2(Enemy):
       spr(330,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,1,0,2,2)
 
   def shootProjectile(self):
-    projectile = Projectile(self.x + 5, int(self.y)) 
+    projectile = Projectile(self.x + 5, int(self.y), shooter=self)
 
     projectile.desno = self.desno
     # doda projektil u listu
@@ -766,7 +807,7 @@ class Enemy3(Enemy):
       spr(352,int(self.x) - int(pogled.x),int(self.y) - int(pogled.y),15,1,1,0,2,2)
 
   def shootProjectile(self):
-    projectile = Projectile(self.x + 5, int(self.y), 3) 
+    projectile = Projectile(self.x + 5, int(self.y), shooter=self)
 
     projectile.desno = self.desno
     # doda projektil u listu
