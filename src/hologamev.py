@@ -15,6 +15,7 @@ hacked_enemy = None
 player_backup = None
 hack_start_level = None
 show_instructions = False
+confetti = [ [random.randint(0,239), random.randint(-30,0), random.choice([6,11,12,1,2,15,5]), random.uniform(0.5,2.0)] for _ in range(30) ]
 
 def TIC():
     update_keys()
@@ -45,9 +46,9 @@ def TIC():
     if state=='menu':
         menu.Menu()
     elif state=='over':
-        menu.Over()
+        menu.EndScreen("GAME OVER", "Press START (space) for restart")
     elif state=='win':
-        menu.PrikaziZaslonPobjede()
+        menu.EndScreen("YOU WON!", "Press START (space) for exit")
 
 def Final():
 	cls(13) 
@@ -821,9 +822,16 @@ class menu:
         menu.AnimateTitle()
 
         # Opcije menija
-        rect(45,58+10*menu.m_ind,150,10,1)
-        print('PLAY', 106, 60, 12, False, 1, False)
-        print('QUIT', 106, 70, 12, False, 1, False)
+        rect(45,58+10*menu.m_ind,150,10,11)
+        if menu.m_ind == 0:
+            print('PLAY', 106, 60, 0, False, 1, False)
+        else:
+            print('PLAY', 106, 60, 12, False, 1, False)
+
+        if menu.m_ind == 1:
+            print('QUIT', 106, 70, 0, False, 1, False)
+        else:
+            print('QUIT', 106, 70, 12, False, 1, False)
 
         #  Šetanje po opcijama na meniju
         if key_down and 48+10*menu.m_ind<50: #ako se budu dodavale još koje opcije, promijeniti uvjet
@@ -850,7 +858,7 @@ class menu:
                 # nasumično se pomakne naslov i promijeni boja
                 x = 33 + random.randint(-4, 4)
                 y = 20 + random.randint(-2, 2)
-                color = random.choice([10, 11, 12, 13, 7])
+                color = random.choice([10, 11, 12, 13, 2])
                 print('CYBERTRACE', x, y, color, False, 3, False)
             
             elif glitch_type == 2:
@@ -877,33 +885,11 @@ class menu:
             print('CYBERTRACE', 33, 20, 12, False, 3, False) 
 
     def AnimateFrame():
-        if is_glitch():
-            # glitch efekt - random boje, okviri, pomaci, dvostruki okvir
-            c = random.choice([10, 11, 12, 13, 7, 15])
-            dx = random.randint(-2, 2)
-            dy = random.randint(-2, 2)
-            # povremeno dvostruki okvir
-            rectb(0+dx, 0+dy, 240, 136, c)
-            if random.random() > 0.5:
-                rectb(2+dx, 2+dy, 236, 132, c)
-        else:
-            # normalan okvir
-            c = 12 if (time() % 500 > 250) else 11
-            rectb(0, 0, 240, 136, c)
+        rectb(0, 0, 240, 136, 11)
 
-    def AnimateWinTitle():
-        if(time()%500>250):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>150):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>350):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>550):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-            
-    def Over():
+    def EndScreen(text, subtext):
+        global state, confetti
         cls(0)
-        text = 'GAME OVER'
         font_size = 2
         char_width = 6 * font_size
         text_width = len(text) * char_width
@@ -911,6 +897,12 @@ class menu:
         y = 50
 
         base_color = 6 if (time() % 500 > 250) else 12
+        sub_x = 32
+
+        if text == "YOU WON!":
+            base_color = 11 if (time() % 500 > 250) else 12
+            sub_x = 40
+
 
         if is_glitch():
             glitch_type = random.randint(1, 3)
@@ -938,24 +930,25 @@ class menu:
             # normalan prikaz
             print(text, x, y, base_color, False, font_size, False)
 
-        subtext = 'Press START (space) for restart'
+        # konfeti
+        if text == "YOU WON!":
+            for i in range(len(confetti)):
+                cx, cy, cc, cspeed = confetti[i]
+                pix(cx, int(cy), cc)
+                confetti[i][1] += cspeed
+                if confetti[i][1] > 140:
+                    confetti[i][0] = random.randint(0,239)
+                    confetti[i][1] = random.randint(-30,0)
+                    confetti[i][2] = random.choice([6,11,12,1,2,15,5])
+                    confetti[i][3] = random.uniform(0.5,2.0)
+
         sub_font_size = 1
-        sub_x = 32
         sub_y = 75
         print(subtext, sub_x, sub_y, 13, False, sub_font_size, False)
 
-        if key_space:
+        if key_space and text == "GAME OVER":
             reset()
-
-    def PrikaziZaslonPobjede():
-        global state
-        cls(0)
-        menu.AnimateFrame()
-        menu.AnimateWinTitle()
-
-        print('START (space) for exit', 62, 70, 4, False, 1, False)
-
-        if key_space:
+        elif key_space and text == "YOU WON!":
             state = 'menu'
 
 class Pogled:
