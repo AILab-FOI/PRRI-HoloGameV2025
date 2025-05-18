@@ -66,6 +66,7 @@ def update_keys():
     prev_key_space = current_key_space
     prev_key_switch = current_key_switch
     prev_key_dash = current_key_dash
+
 class collidable:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -1127,12 +1128,12 @@ class Kartica:
         self.provjeri_pickup()
 
 class Platforma(collidable):
-    def __init__(self, x, y):
-        tile_size = 8
-        self.x = x * tile_size
-        self.y = y * tile_size
-        self.width = tile_size
-        self.height = tile_size
+    def __init__(self, x, y, width):
+        self.tile_size = 8
+        self.x = x * self.tile_size
+        self.y = y * self.tile_size
+        self.width = width * self.tile_size
+        self.height = self.tile_size
         self.fall_timer = 0
         self.falling = False
         self.dead = False
@@ -1189,7 +1190,8 @@ class Platforma(collidable):
 
     def draw(self):
         if not self.dead:
-            spr(1, int(self.x) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
+            for i in range(self.width):
+                spr(1, int(self.x + i) - int(pogled.x), int(self.y) - int(pogled.y), 0, 1, 0, 0, 1, 1)
 
             
 class PromjenaPuska:
@@ -1266,7 +1268,7 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     251, 252, 253, 254, 255,
 ]
 falling_platforms_by_level = [
-    [Platforma(19, 10)],  # level 0
+    [Platforma(19, 10, 1)],  # level 0
     [],  # level 1
     [],  # level 2
     [],  # level 3
