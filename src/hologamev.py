@@ -152,6 +152,8 @@ class player:
     spriteTimer = 0
     on_ladders = False
     dash_timer = 0 
+    on_ground = False
+
     def ProvjeriKolizije(self, xdodatak, ydodatak):
         self.x += xdodatak
         self.y += ydodatak
@@ -203,20 +205,23 @@ class player:
             self.akceleracija = self.acc_normal
 
         #skakanje
-        if key_space and self.vsp == 0: #<- ovo je manje bugged ali bez coyote time  #and not self.jumped:
+        if key_space and (self.on_ground or self.ProvjeriKolizije(self, 0, 1) or self.y >= self.minY or self.ctVar < self.coyoteTime or self.on_ladders):
             sfx(9, "C-4", 10, 0, 2, 0)
-            if self.ProvjeriKolizije(self, 0, 1) or self.y>=self.minY or self.ctVar < self.coyoteTime or self.on_ladders:
-                self.vsp = -self.skokJacina
-                self.jumped = True
-                self.on_ladders = False
+            self.vsp = -self.skokJacina
+            self.jumped = True
+            self.on_ladders = False
+            self.on_ground = False
 
         #coyote time
         if not self.on_ladders:
             if self.ProvjeriKolizije(self, 0, 1):
                 self.ctVar = 0
                 self.jumped = False
+                self.on_ground = True
             else:
                 self.ctVar += 1
+                if self.ctVar > self.coyoteTime:
+                    self.on_ground = False
         
 
         #kretanje lijevo desno
@@ -1148,11 +1153,13 @@ class Platforma(collidable):
             player.y = self.y - player.height
             player.vsp = 0
             player.on_ground = True
+        elif player.on_ground and not (player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4):
+            player.on_ground = False
 
  
         if (player.x + player.width > self.x and player.x < self.x + self.width and abs(player.y + player.height - self.y) < 4 and not self.falling):
             self.fall_timer += 1
-            if self.fall_timer > 60:
+            if self.fall_timer > 20:
                 self.falling = True
         else:
             self.fall_timer = 0
