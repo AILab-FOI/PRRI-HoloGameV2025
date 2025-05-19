@@ -7,53 +7,68 @@
 # script:  python
 
 
+import random
+
 state='menu' #varijabla za game state
 level = 0 # koji level je ucitan (od 0 pa na dalje)
 hacked_enemy = None
 player_backup = None
 hack_start_level = None
+show_instructions = False
+confetti = [ [random.randint(0,239), random.randint(-30,0), random.choice([6,11,12,1,2,15,5]), random.uniform(0.5,2.0)] for _ in range(30) ]
 
 def TIC():
- update_keys()
+    update_keys()
 
- Final()
+    Final()
 
- global state
+    global state
+    global show_instructions
 
- if state=='game':
-   IgrajLevel()
-   if level == 0:
-     print("Keys (AD) for moving left and right", 0, 16)
-     print("Keys (WS) for moving up and down by laders", 0, 24)
-     print("Key (B) for jump, key (E) for weapon change", 0, 32)
-     print("Key (F) for shooting. Be aware of lava nad spikes!!!", 0, 40)
-     print("Touching the enemy also decreases health!!!", 0, 48)
-     print("Key (shift) for dash", 0, 56)
-     print("Key H for hacking the enemy and G is for killing the enemy", 0, 64)
- elif state=='menu':
-   menu.Menu()
- elif state=='over':
-   menu.Over()
- elif state=='win':
-   menu.PrikaziZaslonPobjede()
+    if state=='game':
+        IgrajLevel()
+        if key_instruction:
+            show_instructions = not show_instructions
+        print("Press Select or 'O' for instructions", 0, 16, 12, False, 1, True)
+        if show_instructions:
+            # popup prozor
+            rect(5, 10, 227, 70, 0)    # crna pozadina
+            rectb(5, 10, 227, 70, 12)  # bijeli okvir
+
+            # upute 
+            print("Keys (AD) for moving left and right", 10, 18, 12, False, 1, True)
+            print("Keys (WS) for moving up and down", 10, 26, 12, False, 1, True)
+            print("Key (B) or 'space' for jump", 10, 34, 12, False, 1, True)
+            print("Key (F) for shooting", 10, 42, 12, False, 1, True)
+            print("Key 'shift' for dash", 10, 50, 12, False, 1, True)
+            print("Key (H) for hacking the enemy", 10, 58, 12, False, 1, True)
+            print("Key (G) for killing the enemy when hacked", 10, 66, 12, False, 1, True)
+    if state=='menu':
+        menu.Menu()
+    elif state=='over':
+        menu.EndScreen("GAME OVER", "Press START (space) for restart")
+    elif state=='win':
+        menu.EndScreen("YOU WON!", "Press START (space) for exit")
 
 def Final():
 	cls(13) 
 
 prev_key_space = False
-prev_key_switch = False
+key_instruction = False
+prev_key_instruction = False
 
 def update_keys():
-    global key_space, key_left, key_right, key_up, key_down, key_shoot, key_switch, key_dash, key_hack, key_return, key_selfdestruct 
-    global prev_key_space, prev_key_switch, prev_key_dash
+    global key_space, key_left, key_right, key_up, key_down, key_shoot, key_dash, key_hack, key_return, key_selfdestruct 
+    global prev_key_space, prev_key_dash
+    global key_instruction, prev_key_instruction
 
     current_key_space = key(48) # 'SPACE' ili 'START' ili 'B' na gamepadu (prirodno skakati na B, a birati na 'START')
-    current_key_switch = key(5) # 'E' ili 'SELECT' na gamepadu
     current_key_dash = key(64)
+    current_key_instruction = key(15) # 'O' ili 'SELECT' na gamepadu
 
     key_space = current_key_space and not prev_key_space
-    key_switch = current_key_switch and not prev_key_switch
     key_dash = current_key_dash and not prev_key_dash
+    key_instruction = current_key_instruction and not prev_key_instruction
 
     key_left = key(1) # 'A' ili lijevo na gamepadu
     key_right = key(4) # 'D' ili desno na gamepadu
@@ -64,8 +79,8 @@ def update_keys():
     key_selfdestruct = key(7) # 'G'
     key_return = key(18) #'R'
     prev_key_space = current_key_space
-    prev_key_switch = current_key_switch
     prev_key_dash = current_key_dash
+    prev_key_instruction = current_key_instruction
 class collidable:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -793,6 +808,9 @@ class Enemy3(Enemy):
       self.dead = True
      
 
+def is_glitch():
+    t = time() % 1500
+    return t > 1430
 
 class menu:
     m_ind=0
@@ -804,12 +822,19 @@ class menu:
         menu.AnimateTitle()
 
         # Opcije menija
-        rect(1,48+10*menu.m_ind,238,10,2)
-        print('Play', 100, 50, 4, False, 1, False)
-        print('Quit', 100, 60, 4, False, 1, False)
+        rect(45,58+10*menu.m_ind,150,10,11)
+        if menu.m_ind == 0:
+            print('PLAY', 106, 60, 0, False, 1, False)
+        else:
+            print('PLAY', 106, 60, 12, False, 1, False)
+
+        if menu.m_ind == 1:
+            print('QUIT', 106, 70, 0, False, 1, False)
+        else:
+            print('QUIT', 106, 70, 12, False, 1, False)
 
         #  Šetanje po opcijama na meniju
-        if key_down and 48+10*menu.m_ind<50: #ako se budu dodavale još koje opcije, promijeniti uvijet
+        if key_down and 48+10*menu.m_ind<50: #ako se budu dodavale još koje opcije, promijeniti uvjet
             menu.m_ind += 1
         elif key_up and 48+10*menu.m_ind>=50:
             menu.m_ind += -1
@@ -821,54 +846,109 @@ class menu:
         elif key_space and menu.m_ind==1:
             exit()
 
+
     def AnimateTitle():
-        if(time()%500>250):
-            print('NEON ESCAPE', 57, 20, 6, False, 2, False)
-        elif(time()%500>150):
-            print('NEON ESCAPE', 57, 20, 2, False, 2, False)
-        elif(time()%500>350):
-            print('NEON ESCAPE', 57, 20, 3, False, 2, False)
-        elif(time()%500>550):
-            print('NEON ESCAPE', 57, 20, 10, False, 2, False)
+        t = time() % 1500  
+
+        # glitch efekt traje 70ms svakih 1500ms
+        if t > 1430:
+            glitch_type = random.randint(1, 4)
+            
+            if glitch_type == 1:
+                # nasumično se pomakne naslov i promijeni boja
+                x = 33 + random.randint(-4, 4)
+                y = 20 + random.randint(-2, 2)
+                color = random.choice([10, 11, 12, 13, 2])
+                print('CYBERTRACE', x, y, color, False, 3, False)
+            
+            elif glitch_type == 2:
+                # zamjena slova 
+                title = list('CYBERTRACE')
+                for _ in range(random.randint(1, 3)):
+                    idx = random.randint(0, len(title)-1)
+                    title[idx] = random.choice(['#', '@', '!', '%', '3', '7', 'E', 'C'])
+                print(''.join(title), 33, 20, 13, False, 3, False)
+            
+            elif glitch_type == 3:
+                # ispis naslova u različitim bojama i pomacima (shadow efekt)
+                for dx in [-2, 2]:
+                    for dy in [-1, 1]:
+                        print('CYBERTRACE', 33+dx, 20+dy, random.choice([10, 11, 12]), False, 3, False)
+                print('CYBERTRACE', 33, 20, 12, False, 3, False)
+            
+            elif glitch_type == 4:
+                # flash efekt - bijela boja i pomak
+                print('CYBERTRACE', 33+random.randint(-1,1), 20+random.randint(-1,1), 15, False, 3, False)
+        
+        else:
+            # normalan naslov
+            print('CYBERTRACE', 33, 20, 12, False, 3, False) 
 
     def AnimateFrame():
-        if(time()%500>250):
-            rectb(0,0,240,136,6)
-        elif(time()%500>150):
-            rectb(0,0,240,136,2)
-        elif(time()%500>350):
-            rectb(0,0,240,136,3)
-        elif(time()%500>550):
-            rectb(0,0,240,136,10)
+        rectb(0, 0, 240, 136, 11)
 
-    def AnimateWinTitle():
-        if(time()%500>250):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>150):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>350):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-        elif(time()%500>550):
-            print('YOU WON!', 80, 50, 6, False, 2, False)
-            
-    def Over():
+    def EndScreen(text, subtext):
+        global state, confetti
         cls(0)
-        print('GAME OVER', 75, 50, 2, False, 2, False)
-        print('START (space) for restart', 58, 70, 4, False, 1, False)
+        font_size = 2
+        char_width = 6 * font_size
+        text_width = len(text) * char_width
+        x = (240 - text_width) // 2
+        y = 50
 
-        
-        if key_space:
+        base_color = 6 if (time() % 500 > 250) else 12
+        sub_x = 32
+
+        if text == "YOU WON!":
+            base_color = 11 if (time() % 500 > 250) else 12
+            sub_x = 40
+
+
+        if is_glitch():
+            glitch_type = random.randint(1, 3)
+            if glitch_type == 1:
+                # pomak i boja
+                gx = x + random.randint(-4, 4)
+                gy = y + random.randint(-2, 2)
+                color = random.choice([2, 4, 7, 15])
+                print(text, gx, gy, color, False, font_size, False)
+            elif glitch_type == 2:
+                # zamjena slova
+                title = list(text)
+                for _ in range(random.randint(1, 3)):
+                    idx = random.randint(0, len(title)-1)
+                    if title[idx] != ' ':
+                        title[idx] = random.choice(['#', '@', '!', '%', '0', 'V'])
+                print(''.join(title), x, y, 7, False, font_size, False)
+            elif glitch_type == 3:
+                # shadow efekt
+                for dx in [-2, 2]:
+                    for dy in [-1, 1]:
+                        print(text, x+dx, y+dy, random.choice([2, 4, 7]), False, font_size, False)
+                print(text, x, y, base_color, False, font_size, False)
+        else:
+            # normalan prikaz
+            print(text, x, y, base_color, False, font_size, False)
+
+        # konfeti
+        if text == "YOU WON!":
+            for i in range(len(confetti)):
+                cx, cy, cc, cspeed = confetti[i]
+                pix(cx, int(cy), cc)
+                confetti[i][1] += cspeed
+                if confetti[i][1] > 140:
+                    confetti[i][0] = random.randint(0,239)
+                    confetti[i][1] = random.randint(-30,0)
+                    confetti[i][2] = random.choice([6,11,12,1,2,15,5])
+                    confetti[i][3] = random.uniform(0.5,2.0)
+
+        sub_font_size = 1
+        sub_y = 75
+        print(subtext, sub_x, sub_y, 13, False, sub_font_size, False)
+
+        if key_space and text == "GAME OVER":
             reset()
-
-    def PrikaziZaslonPobjede():
-        global state
-        cls(0)
-        menu.AnimateFrame()
-        menu.AnimateWinTitle()
-
-        print('START (space) for exit', 62, 70, 4, False, 1, False)
-
-        if key_space:
+        elif key_space and text == "YOU WON!":
             state = 'menu'
 
 class Pogled:
@@ -1064,8 +1144,6 @@ class Puska:
       if player.shootTimer < 0:
         if key_shoot:
             Puska.pucaj(prvaPuska)
-        if key_switch:
-            Puska.PromijeniPusku()
       
       eksdes = 12
       ekslijevo = -4
