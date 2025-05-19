@@ -1144,11 +1144,11 @@ class Kartica:
 
 
 class Platforma(collidable):
-    def __init__(self, x, y):
+    def __init__(self, x, y, width):
         tile_size = 8
         self.x = x * tile_size
         self.y = y * tile_size
-        self.width = tile_size
+        self.width = width * tile_size
         self.height = tile_size
         self.fall_timer = 0
         self.falling = False
@@ -1206,9 +1206,10 @@ class Platforma(collidable):
 
     def draw(self):
         if not self.dead:
-            pixel_x = int(self.x) - int(pogled.x)
-            pixel_y = int(self.y) - level * LEVEL_HEIGHT * 8 - int(pogled.y)
-            spr(1,pixel_x,pixel_y, 0, 1, 0, 0, 1, 1)
+            for i in range(0, self.width, 8):  # Iteriranje kroz širinu platforme
+                pixel_x = int(self.x + i) - int(pogled.x)
+                pixel_y = int(self.y) - level * LEVEL_HEIGHT * 8 - int(pogled.y)
+                spr(1, pixel_x, pixel_y, 0, 1, 0, 0, 1, 1)
 
             
 class PromjenaPuska:
@@ -1286,8 +1287,8 @@ background_tile_indexes = [ # indexi tileova sa elementima koji nemaju definiraj
     185,186,187,188,201,202,203,204,217,218,219,220 #doctor
 ]
 falling_platforms_by_level = [
-    [Platforma(19, 10)],  # level 0
-    [Platforma(132, 27),Platforma(136, 26),Platforma(140, 27)],  # level 1
+    [Platforma(19, 10, 1)],  # level 0
+    [Platforma(132, 27, 2),Platforma(136, 26, 2),Platforma(140, 27, 2)],  # level 1
     [],  # level 2
     [],  # level 3
 ]
