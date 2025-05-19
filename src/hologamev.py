@@ -384,18 +384,59 @@ projectiles = []
 def HackedEnemyController(enemy, coll):
     enemy.coll = coll
     global hacked_enemy, player_backup, level, key_shoot, prev_key_shoot
+
+    # --- LADDER CHECK ---
+    enemy.on_ladders = False
+    tile_size = 8
+    ladder_tile_indexes = [13,14,29,30,45,46,61,62]
+    check_points = [
+        (enemy.x + 4, enemy.y + 4),
+        (enemy.x + enemy.width - 4, enemy.y + 4),
+        (enemy.x + 4, enemy.y + enemy.height - 4),
+        (enemy.x + enemy.width - 4, enemy.y + enemy.height - 4)
+    ]
+
+    # Check if any part of the enemy is touching a ladder
+    for px, py in check_points:
+        tile_x = int(px / tile_size)
+        tile_y = int(py / tile_size) + level * LEVEL_HEIGHT
+        tile = mget(tile_x, tile_y)
+        if tile in ladder_tile_indexes:
+            enemy.on_ladders = True
+            break
     
     # Movement controls
+    if key_up and enemy.on_ladders:
+        enemy.y -= 2
+    elif key_down and enemy.on_ladders:
+        enemy.y += 2
+
+    enemy.hsp = 0
     if key_left:
-        enemy.x -= 2
+        enemy.hsp = -enemy.maxBrzina
         enemy.desno = False
     elif key_right:
-        enemy.x += 2
+        enemy.hsp = enemy.maxBrzina
         enemy.desno = True
-    if key_up:
-        enemy.y -= 2
-    elif key_down:
-        enemy.y += 2
+
+    #horizontal movement with collision
+    if enemy.hsp != 0:
+        if not enemy.ProvjeriKolizije(enemy.hsp, 0):
+            enemy.x += enemy.hsp
+        else:
+            # Pixel-by-pixel backup (slide until blocked)
+            step = 1 if enemy.hsp > 0 else -1
+            while not enemy.ProvjeriKolizije(step, 0):
+                enemy.x += step
+    
+    if not enemy.ProvjeriKolizije(enemy.hsp, 0):
+        enemy.x += enemy.hsp
+    else:
+        enemy.hsp = 0
+
+    if key_space and enemy.vsp == 0:
+        if enemy.ProvjeriKolizije(0, 1) or enemy.y >= enemy.minY:
+            enemy.vsp = -enemy.skokJacina
         
     # Handle shooting cooldown
     if enemy.shootCooldown > 0:
@@ -418,21 +459,94 @@ def HackedEnemyController(enemy, coll):
     if key_return:
         ReturnToPlayer() 
         
-    # Level transition logic
-    tile_size = 8
-    teleport_tile_index = 145  
-    desired_x, desired_y = 78, 28 
+    # --- TELEPORT PAD CHECK ---
+    teleported= CheckTeleportPads(enemy)
+    if teleported:
+        return
+    
+    # --- LADDER MOVEMENT ---
+    if enemy.on_ladders:
+        if key_up:
+            enemy.vsp = pomakni(enemy.vsp, -enemy.maxBrzina, enemy.akceleracija)
+        elif key_down:
+            enemy.vsp = pomakni(enemy.vsp, enemy.maxBrzina, enemy.akceleracija)
+        else:
+            enemy.vsp = pomakni(enemy.vsp, 0, enemy.akceleracija)
 
-    center_x = int((enemy.x + enemy.width // 2) / tile_size)
-    foot_y = int((enemy.y + enemy.height - 1) / tile_size)
-    map_y = foot_y + level * LEVEL_HEIGHT
-    tile_under = mget(center_x, map_y)
-    if tile_under == teleport_tile_index:
-        level += 1
-        ZapocniLevel(level)
-        enemy.x = desired_x * tile_size
-        enemy.y = (desired_y - level * LEVEL_HEIGHT) * tile_size
-    enemy.vsp += enemy.gravitacija
+        if enemy.ProvjeriKolizije(0, enemy.vsp) or enemy.y + enemy.vsp >= enemy.minY:
+            enemy.vsp = 0
+
+    else:
+        # --- GRAVITY & COLLISION (copied/adapted from player) ---
+        if enemy.y + enemy.vsp >= enemy.minY or enemy.ProvjeriKolizije(0, enemy.vsp + 1):
+            if enemy.vsp > 0:
+                while enemy.y < enemy.minY and not enemy.ProvjeriKolizije(0, 1):
+                    enemy.y += 1
+            enemy.vsp = 0
+        else:
+            #apply gravity
+            enemy.vsp += enemy.gravitacija
+            #handle ceiling collision
+            if enemy.ProvjeriKolizije(0, enemy.vsp):
+                #exact collision point
+                if enemy.vsp > 0:
+                    while not enemy.ProvjeriKolizije(0, 1):
+                        enemy.y += 1
+                else:
+                    while not enemy.ProvjeriKolizije(0, -1):
+                        enemy.y -= 1
+                enemy.vsp = 0
+
+    # --- APPLY MOVEMENT ---
+    enemy.y += enemy.vsp
+
+def CheckTeleportPads(enemy):
+    """
+    Handle teleport pad detection and teleportation
+    Returns True if teleported
+    """
+    teleport_pairs = {
+        144: 147, 145: 148, 146: 149,
+    }
+    tile_size = 8
+    global level
+    # Multiple check points at the bottom of enemy
+    check_points = [
+        (enemy.x + 4, enemy.y + enemy.height),
+        (enemy.x + enemy.width/2, enemy.y + enemy.height),
+        (enemy.x + enemy.width - 4, enemy.y + enemy.height)
+    ]
+    
+    for px, py in check_points:
+        cx = int(px / tile_size)
+        cy = int(py / tile_size) + level * LEVEL_HEIGHT
+        tile = mget(cx, cy)
+        
+        if tile in teleport_pairs:
+            dest_tile = teleport_pairs[tile]
+            
+            # Search ALL levels for destination
+            for search_level in range(0, MAX_LEVELS):  # Assuming MAX_LEVELS is defined
+                for ty in range(0, LEVEL_HEIGHT):
+                    for tx in range(0, 240):  # Assuming max width is 240
+                        # Check with level offset
+                        if mget(tx, ty + search_level * LEVEL_HEIGHT) == dest_tile:
+                            # Found destination! Move enemy there
+                            enemy.x = tx * tile_size
+                            enemy.y = (ty * tile_size) - enemy.height/2
+                            
+                            # Change level if needed
+                            if search_level != level:
+                                level = search_level
+                                # If you have a level transition function, call it here
+                                # ZapocniLevel(level)  # Uncomment if needed
+                            
+                            # Play teleport sound
+                            sfx(10, "D-4", 10, 0, 3, 1)
+                            return True
+    
+    return False
+
 
 def ReturnToPlayer():
     global hacked_enemy, player, player_backup, level, hack_start_level
@@ -458,7 +572,7 @@ class Enemy:
   dx = -1  
   vsp = 0
   gravitacija = 0.3
-  skokJacina = 3
+  skokJacina = 4.4
   minY = 120
   desno = False
   shotTimer = 0  # timer za pucanje
@@ -477,14 +591,47 @@ class Enemy:
         self.dx = -1  
         self.vsp = 0
         self.gravitacija = 0.3
-        self.skokJacina = 3
+        self.skokJacina = 4.4
         self.minY = 120
         self.desno = False
         self.coll = []
         self.health = 2
         self.dead = False
         self.shootCooldown = 0  # Only need cooldown for manual shooting
-
+        self.maxBrzina=1
+        self.akceleracija=0.25
+        self.on_ladders=False
+  
+  def isOnLadder(self):
+        """
+        Helper method to check if enemy is on a ladder
+        """
+        # First, check if on ground - if so, not on ladder
+        if self.ProvjeriKolizije(0, 1) or self.y >= self.minY:
+            # There's ground beneath us - don't allow ladder movement
+            return False
+  
+        tile_size = 8
+        ladder_tile_indexes = [13,14,29,30,45,46,61,62]
+        
+        # Check multiple points around the enemy's body
+        check_points = [
+            (self.x + 4, self.y + 4),
+            (self.x + self.width - 4, self.y + 4),
+            (self.x + 4, self.y + self.height - 4),
+            (self.x + self.width - 4, self.y + self.height - 4),
+            (self.x + self.width/2, self.y + self.height/2)
+        ]
+        
+        for px, py in check_points:
+            tile_x = int(px / tile_size)
+            tile_y = int(py / tile_size) + level * LEVEL_HEIGHT
+            tile = mget(tile_x, tile_y)
+            
+            if tile in ladder_tile_indexes:
+                return True
+                
+        return False
 
   def movement(self, coll):
     self.coll = coll
@@ -660,6 +807,8 @@ class Enemy2(Enemy):
     tile_size = 8
     self.x = x*tile_size
     self.y = y*tile_size
+    self.maxBrzina = 2
+    self.akceleracija = 0.25
 
   def movement(self, coll):
     self.coll = coll
@@ -758,6 +907,8 @@ class Enemy3(Enemy):
     tile_size = 8
     self.x = x*tile_size
     self.y = y*tile_size
+    self.maxBrzina = 2
+    self.akceleracija = 0.25
 
   def movement(self, coll):
     self.coll = coll
