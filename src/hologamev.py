@@ -458,12 +458,6 @@ def HackedEnemyController(enemy, coll):
         ReturnToPlayer()
     if key_return:
         ReturnToPlayer() 
-        
-    # --- TELEPORT PAD CHECK ---
-    teleported= CheckTeleportPads(enemy)
-    if teleported:
-        return
-    
     # --- LADDER MOVEMENT ---
     if enemy.on_ladders:
         if key_up:
@@ -499,54 +493,6 @@ def HackedEnemyController(enemy, coll):
 
     # --- APPLY MOVEMENT ---
     enemy.y += enemy.vsp
-
-def CheckTeleportPads(enemy):
-    """
-    Handle teleport pad detection and teleportation
-    Returns True if teleported
-    """
-    teleport_pairs = {
-        144: 147, 145: 148, 146: 149,
-    }
-    tile_size = 8
-    global level
-    # Multiple check points at the bottom of enemy
-    check_points = [
-        (enemy.x + 4, enemy.y + enemy.height),
-        (enemy.x + enemy.width/2, enemy.y + enemy.height),
-        (enemy.x + enemy.width - 4, enemy.y + enemy.height)
-    ]
-    
-    for px, py in check_points:
-        cx = int(px / tile_size)
-        cy = int(py / tile_size) + level * LEVEL_HEIGHT
-        tile = mget(cx, cy)
-        
-        if tile in teleport_pairs:
-            dest_tile = teleport_pairs[tile]
-            
-            # Search ALL levels for destination
-            for search_level in range(0, MAX_LEVELS):  # Assuming MAX_LEVELS is defined
-                for ty in range(0, LEVEL_HEIGHT):
-                    for tx in range(0, 240):  # Assuming max width is 240
-                        # Check with level offset
-                        if mget(tx, ty + search_level * LEVEL_HEIGHT) == dest_tile:
-                            # Found destination! Move enemy there
-                            enemy.x = tx * tile_size
-                            enemy.y = (ty * tile_size) - enemy.height/2
-                            
-                            # Change level if needed
-                            if search_level != level:
-                                level = search_level
-                                # If you have a level transition function, call it here
-                                # ZapocniLevel(level)  # Uncomment if needed
-                            
-                            # Play teleport sound
-                            sfx(10, "D-4", 10, 0, 3, 1)
-                            return True
-    
-    return False
-
 
 def ReturnToPlayer():
     global hacked_enemy, player, player_backup, level, hack_start_level
