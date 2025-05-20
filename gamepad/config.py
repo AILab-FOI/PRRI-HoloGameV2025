@@ -28,7 +28,7 @@ abe = {
 hologamev = {
     "title": "HoloGame V",
     "players": 1,
-    "executable": "\"C:\\Users\\dinob\\Desktop\\tic80 2.0.exe\"",
+    "executable": "\"C:\\Users\\Matej\\Desktop\\PRRI-HoloGameV2025\\PRRI-HoloGameV2025\\src\\tic80.exe\"",
     'toggles': ['UP', 'DOWN', 'LEFT', 'RIGHT'],
     'taps': ['SELECT', 'START', 'A', 'B'],
     "description": """A TIC-80 game.""",
@@ -40,7 +40,7 @@ hologamev = {
             'DOWN': 'S',
             'LEFT': 'A',
             'RIGHT': 'D',
-            'SELECT': 'E',
+            'SELECT': 'O',
             'START': 'space',
             'A': 'F',
             'B': 'space'

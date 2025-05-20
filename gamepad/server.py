@@ -35,7 +35,11 @@ def popenAndCall(onExit, *popenArgs):
     """
     def runInThread(onExit, *popenArgs):
         tic80_exe = popenArgs[0]
-        command = f'"{tic80_exe}" --cmd="cd Hologame-V/src & load hologamev.py & run"'
+        command = [
+            tic80_exe,
+            '--fs', '../src',
+            '--cmd', 'load hologamev.py & run'
+        ]
         proc = subprocess.Popen(command, shell=True)
         proc.wait()  # Wait for the process to complete
 
@@ -115,10 +119,17 @@ def ctrl():
     def game_exit_callback():
         GAME_STARTED = False
         print('Game finished! Asking clients to stop.')
-        socketio.emit('stop', broadcast=True)  # Emit 'stop' event to all clients
+        socketio.emit('stop')  # Emit 'stop' event to all clients
         print('Done!')
+   
+    import os
+    import sys
+    import subprocess
 
-    tic80_exe = r'C:\Users\dinob\Desktop\tic80 2.0.exe'
+    exe_name = 'tic80.exe' if sys.platform.startswith('win') else 'tic80'
+    tic80_exe = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', exe_name))
+
+
     popenAndCall(lambda: game_exit_callback(), tic80_exe)
     GAME_STARTED = True
     return render_template('ctrl.html', game='hologamev')
